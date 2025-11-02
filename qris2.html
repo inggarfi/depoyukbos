@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Deposit</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1PKnHmdCN3Xwnvq5bVe-Eo6gfE-7QaQPWmBCvVl6vIA&s=10') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(25px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 550px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn { from {opacity:0; transform:translateY(-20px);} to {opacity:1; transform:translateY(0);} }
+        h2 { text-align:center; color:#007bff; margin-bottom:20px; font-weight:600; }
+        .tab-buttons { display:flex; justify-content:center; margin-bottom:25px; flex-wrap:wrap; }
+        .tab-button {
+            background: linear-gradient(135deg,#ddd,#bbb);
+            border:none;
+            padding:12px 25px;
+            cursor:pointer;
+            border-radius:25px;
+            margin:5px;
+            transition:all .3s ease;
+            font-weight:500;
+        }
+        .tab-button.active {
+            background: linear-gradient(135deg,#007bff,#0056b3);
+            color:white;
+        }
+        .form-section { display:none; animation: slideIn .4s ease-in-out; }
+        .form-section.active { display:block; }
+        @keyframes slideIn { from{opacity:0; transform:translateX(-20px);} to{opacity:1; transform:translateX(0);} }
+        label { display:block; margin-bottom:8px; font-weight:600; color:#555; }
+        input, select {
+            width:100%; padding:12px; margin-bottom:8px;
+            border:1px solid #ddd; border-radius:8px;
+            transition:border-color .3s ease;
+        }
+        input:focus, select:focus {
+            border-color:#007bff;
+            outline:none;
+            box-shadow:0 0 5px rgba(0,123,255,0.5);
+        }
+        .error-message {
+            color:#dc3545;
+            font-size:14px;
+            margin-bottom:12px;
+            display:none;
+        }
+        .copy-button, .refresh-button, .deposit-button, .create-qris-button, .help-button {
+            border:none;
+            padding:12px 25px;
+            border-radius:8px;
+            cursor:pointer;
+            width:100%;
+            font-size:16px;
+            transition:all .3s ease;
+            margin-top:10px;
+        }
+        .copy-button { background:linear-gradient(135deg,#17a2b8,#138496); color:white; }
+        .refresh-button, .deposit-button, .create-qris-button { background:linear-gradient(135deg,#28a745,#20c997); color:white; }
+        .help-button { background:linear-gradient(135deg,#ffc107,#ffca2c); color:black; }
+        .qris-container { text-align:center; margin-top:25px; display:none; }
+        .qris-container img { max-width:220px; border-radius:10px; }
+        .nominal-display { font-weight:bold; color:#007bff; margin:10px 0; }
+        .terms-link { color:#007bff; text-decoration:underline; cursor:pointer; }
+        .terms-dropdown {
+            display:none; text-align:left; margin-top:10px;
+            padding:10px; background:rgba(255,255,255,0.8);
+            border-radius:8px;
+        }
+        .terms-dropdown ul { margin:0; padding-left:20px; }
+        .spinner {
+            display:none; position:fixed; top:0; left:0;
+            width:100%; height:100%;
+            background-color:rgba(0,0,0,0.6);
+            justify-content:center; align-items:center; z-index:1000;
+        }
+        .spinner-content {
+            background:rgba(255,255,255,0.95);
+            padding:30px; border-radius:15px; text-align:center;
+        }
+        .spinner-circle {
+            border:5px solid #f3f3f3;
+            border-top:5px solid #007bff;
+            border-radius:50%;
+            width:50px; height:50px;
+            animation:spin 1s linear infinite;
+            margin:0 auto 15px;
+        }
+        @keyframes spin { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Formulir Deposit</h2>
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="showTab('instant')">Deposit Instant</button>
+            <button class="tab-button" onclick="showTab('manual')">Deposit Manual</button>
+        </div>
+
+        <!-- Deposit Instant -->
+        <div id="instant" class="form-section active">
+            <label for="nominal-instant">Nominal Deposit (Minimal 50.000):</label>
+            <input type="number" id="nominal-instant" min="50000" placeholder="Masukkan nominal">
+            <div id="error-instant-nominal" class="error-message">Minimal deposit 50.000</div>
+            
+            <label for="bonus-instant">Pilih Bonus:</label>
+            <select id="bonus-instant">
+                <option value="">Pilih Bonus</option>
+                <option value="tanpa">Tanpa Bonus</option>
+                <option value="100%">Bonus Deposit 100%</option>
+                <option value="garansi">Bonus Garansi Kekalahan</option>
+                <option value="rollingan">Bonus Rollingan</option>
+            </select>
+            
+            <button class="create-qris-button" onclick="createQris()">Buat QRIS</button>
+            
+            <div class="qris-container" id="qris-container">
+                <p>Scan QRIS untuk deposit:</p>
+                <img src="https://imagizer.imageshack.com/v2/320xq70/r/921/i0mH4i.jpg" alt="QRIS">
+                <p class="nominal-display" id="nominal-display"></p>
+                <p><span class="terms-link" onclick="toggleTerms('terms-dropdown-instant')">Ketentuan deposit</span></p>
+                <div class="terms-dropdown" id="terms-dropdown-instant">
+                    <ul>
+                        <li>Deposit Pertama Wajib Kode Unik</li>
+                        <li>Deposit Wajib menggunakan bank/ewallet aktif</li>
+                    </ul>
+                </div>
+                <button class="refresh-button" onclick="refreshSaldo()">Refresh Saldo</button>
+            </div>
+        </div>
+
+        <!-- Deposit Manual -->
+        <div id="manual" class="form-section">
+            <label for="nominal-manual">Nominal Deposit (Minimal 50.000):</label>
+            <input type="number" id="nominal-manual" min="50000" placeholder="Masukkan nominal">
+            <div id="error-manual-nominal" class="error-message">Minimal deposit 50.000</div>
+            
+            <label for="tujuan">Tujuan Deposit:</label>
+            <select id="tujuan">
+                <option value="">Pilih Tujuan</option>
+                <option value="dana">Dana - Surwati - 088214538915</option>
+                <option value="ovo">OVO - Enjah - 088905200893</option>
+            </select>
+            <div id="error-manual-tujuan" class="error-message">Pilih tujuan deposit terlebih dahulu</div>
+            
+            <button class="copy-button" onclick="copyAccountNumber()">Salin Nomor Rekening</button>
+            
+            <label for="bonus-manual">Pilih Bonus:</label>
+            <select id="bonus-manual">
+                <option value="">Pilih Bonus</option>
+                <option value="tanpa">Tanpa Bonus</option>
+                <option value="100%">Bonus Deposit 100%</option>
+                <option value="garansi">Bonus Garansi Kekalahan</option>
+                <option value="rollingan">Bonus Rollingan</option>
+            </select>
+
+            <p><span class="terms-link" onclick="toggleTerms('terms-dropdown-manual')">Ketentuan deposit</span></p>
+            <div class="terms-dropdown" id="terms-dropdown-manual">
+                <ul>
+                    <li>Deposit Pertama Wajib Kode Unik</li>
+                    <li>Deposit Wajib menggunakan bank/ewallet aktif</li>
+                </ul>
+            </div>
+            
+            <button class="deposit-button" onclick="processDeposit('manual')">Deposit</button>
+        </div>
+
+        <button class="help-button" onclick="showHelp()">Bantuan Deposit</button>
+    </div>
+
+    <div class="spinner" id="spinner">
+        <div class="spinner-content">
+            <div class="spinner-circle"></div>
+            <p>Memproses deposit...</p>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tab) {
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            document.querySelector(`[onclick="showTab('${tab}')"]`).classList.add('active');
+        }
+
+        function createQris() {
+            const nominal = document.getElementById('nominal-instant').value;
+            const errorNominal = document.getElementById('error-instant-nominal');
+            if (nominal < 50000 || nominal === "") {
+                errorNominal.style.display = 'block';
+                return;
+            } else {
+                errorNominal.style.display = 'none';
+            }
+            document.getElementById('qris-container').style.display = 'block';
+            const formattedNominal = 'IDR ' + new Intl.NumberFormat('id-ID').format(nominal);
+            document.getElementById('nominal-display').textContent = formattedNominal;
+        }
+
+        function toggleTerms(id) {
+            const dropdown = document.getElementById(id);
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function refreshSaldo() {
+            const spinner = document.getElementById('spinner');
+            spinner.style.display = 'flex';
+            setTimeout(() => { spinner.style.display = 'none'; window.history.back(); }, 2000);
+        }
+
+        function processDeposit(type) {
+            const nominal = document.getElementById('nominal-manual').value;
+            const tujuan = document.getElementById('tujuan').value;
+            const errorNominal = document.getElementById('error-manual-nominal');
+            const errorTujuan = document.getElementById('error-manual-tujuan');
+            let valid = true;
+
+            if (nominal < 50000 || nominal === "") {
+                errorNominal.style.display = 'block';
+                valid = false;
+            } else errorNominal.style.display = 'none';
+
+            if (tujuan === "") {
+                errorTujuan.style.display = 'block';
+                valid = false;
+            } else errorTujuan.style.display = 'none';
+
+            if (!valid) return;
+
+            const spinner = document.getElementById('spinner');
+            spinner.style.display = 'flex';
+            setTimeout(() => { spinner.style.display = 'none'; window.history.back(); }, 1500);
+        }
+
+        function showHelp() {
+            window.location.href = 'https://direct.lc.chat/19347249';
+        }
+
+        function copyAccountNumber() {
+            const tujuan = document.getElementById('tujuan').value;
+            let number = '';
+            if (tujuan === 'dana') number = '088214538915';
+            else if (tujuan === 'ovo') number = '088905200893';
+            else {
+                document.getElementById('error-manual-tujuan').style.display = 'block';
+                return;
+            }
+            navigator.clipboard.writeText(number)
+                .then(() => alert('Nomor rekening berhasil disalin: ' + number))
+                .catch(() => alert('Gagal menyalin, silakan salin manual: ' + number));
+        }
+    </script>
+</body>
+</html>
